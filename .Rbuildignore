@@ -1,0 +1,7 @@
+^\.git$
+^\.gitignore$
+^\.DS_Store$
+^\.Rhistory$
+^\.Rproj\.user$
+^.*\.Rcheck$
+^LaTerra_[0-9].*\.tar\.gz$

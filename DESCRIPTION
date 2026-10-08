@@ -1,0 +1,41 @@
+Package: LaTerra
+Title: La Terra: A Matrix-First Framework for Branch-Wise Comparative Genomics
+Version: 0.0.0.9022
+Authors@R: 
+    person("Jiaqi", "Wu", email = "wujiaqi@hiroshima-u.ac.jp", role = c("aut", "cre"))
+Description: A matrix-first framework and evolving R-native platform for
+    auditable branch-wise comparative genomics on supplied coordinate-valid
+    matrices. Provides explicit binary-trait input readers, recipe inspection,
+    a historical S2 computation route, saved-result diagnostics, bounded reports,
+    and plots without refitting. Marine/S2 is the first exact-replay historical
+    example, not a restriction on the framework's future scope. Provides
+    lightweight S3 objects, configuration containers, and provenance contracts.
+    Implements the trait-independent nonnegative C3
+    margin-working-mean baseline with explicit graph, boundary, facial-set,
+    deterministic fitting, and certificate contracts. Adds trait-free,
+    threshold-free descriptive geometry diagnostics for materialized rate
+    representations without changing scientific inputs or eligibility. The
+    current log-relative contract is boundary aware: positive GBI values have
+    finite natural-log coordinates, exact observed zeros with positive
+    denominator are mathematical boundaries, and unavailable causes remain a
+    separate compact ledger. ZERO_MASS and POSITIVE_LOG are separate
+    association and calibration components with no joint p-value. Historical
+    finite-sentinel logGBI objects are read/migrate-only; their global-k10 view
+    is diagnostic/replay-only, is refused by ordinary inference, and can be
+    checked against separately supplied source and replay authorities. Adds
+    exact-keyed branch-state objects, Layer-5 association domains, unweighted
+    point estimands, and empirical calibration against externally supplied
+    coherent branch-state null worlds without generating or adjudicating a
+    scientific null.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends: R (>= 4.2.0)
+Imports: digest, yaml, parallel
+Suggests: testthat (>= 3.0.0), ape, castor, glmnet, openxlsx, xml2, zip,
+    SplitAlignerR (>= 0.1.0.9002), ggtree, ggplot2
+Config/testthat/edition: 3
+NeedsCompilation: no
+Author: Jiaqi Wu [aut, cre]
+Maintainer: Jiaqi Wu <wujiaqi@hiroshima-u.ac.jp>

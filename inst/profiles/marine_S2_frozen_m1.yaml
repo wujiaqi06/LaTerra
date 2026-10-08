@@ -1,0 +1,85 @@
+profile_id: marine_S2_frozen
+milestone: M1
+scope: study_specific_reproduction_not_universal_default
+target001_sha256: 25f85573b36578a919d50d5c11bcf10a1a3a1569d26d4a7e656fe87cdf6a1363
+certified_source_base_version: 0.0.0.9017
+certified_source_base_sha256: 2510cc620ff5246721c62ad3a7bbfa37013b2e94659ed46806451bba64eb1e68
+authority_addendum:
+  id: TARGET001-AUTHORITY-ADDENDUM001
+  sol_decision_sha256: 2a63fa94ce9a86054b4d9604651522ce18cca38307585fd0734cb5c8caba6ae0
+  A2U_outer_sha256: 62965c8d5946aa4ce55cd30273824a2a07f16c8db935f2d1fdfe22b42e268896
+  numeric_authority: original_Dryad_raw_matrix
+  classified_role: immutable_historical_partial_provenance
+  complete_state_role: supplemental_complete_upstream_state_provenance
+  changes_numerical_science: false
+execution_path_addendum:
+  id: TARGET001-AUTHORITY-ADDENDUM006-GBI-ORDER-SERIALIZATION001
+  authority_sha256: cebaafc6fdfb019d36d9fcb0960f171a765f65cb6a767f06c9a156a5d9ec99c5
+  scope: frozen_Marine_historical_execution_path_only
+  raw_and_public_axes: unchanged_original_old_labels
+  computation_order: explicit_inverse_crosswalk_view_native_order
+  writer: original_CODE_GBI_write_table_defaults
+  old_axis_restore: written_text_token_permutation_only
+  downstream_input: this_run_generated_oldlabel_GBI_read_back
+  archived_GBI_input: forbidden
+  generic_S2_affected: false
+reference_environment:
+  R: 4.4.2
+  platform: aarch64-apple-darwin20
+  ape: 5.8-1
+  castor: 1.8.4
+inputs:
+  branch_archive:
+    path: 17_large_matrix_archives/branch_coordinate_matrices.tar.gz
+    sha256: 1dcc4bdbec568c3e02a17077a528ecc40ecfe1598c98de23195d215b4e046552
+  traits:
+    path: 00_traits_and_species/trait_table.mammal302.active_TY_NK_final_18pt.tsv
+    sha256: b7b04906d074bb2bd8f82b5b646fcd76b1b880e566ef6cb8a0cf0ef54ed0ccd2
+  complete_state:
+    path: supplemental_authority/marine_2026_fixed_coord_state_17432_v1.tsv.gz
+    sha256: 9ca602eedaeb5d8cdd3f83846c30579f1a2abcf1ebc674f75620a72ffb618512
+    canonical_uncompressed_sha256: 10eaaf5becc1c84f03c9f818db8cbc1a69bd7152b641b8d11d958366dc85b564
+archive_members:
+  matrix:
+    path: fix_17434.matrix_no_fuse.oldlabels.txt
+    sha256: 3ec73fa19d2706d6ff86f397e1235f1303f6364f7cfb422189d0bd3917551a7e
+  classified:
+    path: 17434.fix.na_classified.oldlabels.txt
+    sha256: d83b1bbb4f4ae124bd4e385f52ccd681c0ef9d1094464f7517753af1b3d00685
+  tree:
+    path: species_tree.forSplit.nwk
+    sha256: bb046d5072a6e86841515dd77b76b4b09cb113f22883d181aac63660e530dc68
+  branch_map:
+    path: species_tree.branch_map.txt
+    sha256: ec769cd16fb27e93e9f962a4320b95ee56e3de5eb00ee6398bacbe7c3a9edef9
+  splits:
+    path: species_tree.splits.txt
+    sha256: e9e2aaf5e8dbb4932c99700a1d74232b90d12252df24f2f1c0d2c4f7bfdea29b
+  old_keys:
+    path: endpointfix_old_branch_split_keys.tsv
+    sha256: 4a5f4f33ec1a4408803ccccba2b1ee9d6172bda45f4bdbfe6959340bcdad59b5
+  crosswalk:
+    path: endpointfix_branch_label_crosswalk_new_to_old.tsv
+    sha256: 6737625cd8e6dbeb7a1f3d8b247ef71d9efe836ecfa4d124c25773e0662ca14c
+scientific_contract:
+  axis_mode: preserve_public_old_labels_explicit_inverse_computational_view_only
+  trim_quantile: 0.975
+  quantile_type: 7
+  trim_ties: inclusive_greater_than_or_equal
+  marginals: unweighted_arithmetic_means_after_trim
+  grand_mean_normalization: none
+  numerical_operation_order: trimmed_matrix_divide_branch_mean_then_gene_mean
+  ASR: castor_asr_max_parsimony
+  tip_input_encoding: historical_numeric_trait_plus_one
+  internal_state_encoding: likelihood_column_index_minus_one
+  ASR_ties: first
+  annotation_join: supplied_old_split_sides_to_tree_descendant_taxa
+  statistic: two_sided_Welch_background_minus_focal
+  minimum_group_size: 2
+  multiplicity: historical_sorted_P_strict_prefix_stop_at_first_failure
+  alpha: 0.01
+  RNG: none
+traits:
+  marine_binary: marine_binary
+  aquatic_v2: aquatic_v2_status
+execution_reads_expected_outputs: false

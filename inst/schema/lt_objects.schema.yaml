@@ -1,0 +1,493 @@
+schema_version: "1.6.0"
+status: "LT000A-T2E boundary-aware log-relative architecture with FIX002 config and legacy-replay safety closure"
+serialization:
+  canonical_skeleton_form: "RDS version 3"
+  config_form: "YAML"
+  validation_authority: "R-native semantic validators"
+objects:
+  lt_matrix:
+    storage: "dense base-R matrix"
+    fields:
+      values: "numeric matrix; gene rows x branch columns"
+      coord_state: "coordinate-truth character matrix with identical axes"
+      value_reason: "current-payload absence-reason character matrix with identical axes"
+      payload: "typed named list"
+      gene_ids: "ordered unique character vector"
+      branch_ids: "ordered unique character vector"
+      coordinate_provenance: "exact coordinate-axis identities; stored, never recomputed"
+      metadata: "named list"
+    payload_fields:
+      type: "open non-empty payload type"
+      name: "non-empty representation name"
+      units: "non-empty units declaration"
+      scale: "non-empty scale declaration"
+      origin: "imported or derived"
+      spec_id: "required for derived payload; nullable for imported payload"
+    coordinate_provenance_required:
+      - coordinate_system
+      - reference_tree_sha256
+      - ordered_branch_ledger_sha256
+      - ordered_taxon_ledger_sha256
+      - branch_label_contract
+      - source_method
+    invariants:
+      - "coord_state vocabulary is exactly observed, NA_struct, NA_fuse, NA_topo, residual_NA"
+      - "coord_state != observed implies values is NA and value_reason is NA"
+      - "coord_state == observed plus finite value implies value_reason is NA"
+      - "coord_state == observed plus NA value requires a non-empty value_reason"
+      - "NaN and infinite values are prohibited; numeric zero is valid"
+      - "values, coord_state, value_reason, and ordered ledgers have identical axes"
+      - "downstream operators must not rewrite coordinate truth because a payload value is unavailable"
+  lt_trait:
+    fields:
+      trait_id: "stable identifier"
+      taxon_ids: "ordered unique character vector"
+      values: "atomic vector aligned to taxon_ids"
+      type: "binary, categorical, ordinal, or continuous"
+      coding: "named declarative coding list"
+      metadata: "named list"
+    invariants:
+      - "one value per taxon"
+      - "taxon IDs are unique"
+  lt_branch_state:
+    fields:
+      state_id: "stable branch-state identifier"
+      trait_id: "source trait-concept identifier; not a taxon-key declaration"
+      branch_ids: "ordered unique exact scientific branch keys"
+      values: "atomic branch-associated values"
+      type: "binary, continuous, ordinal, or categorical"
+      availability: "available, unavailable, or unresolved"
+      reason: "NA for available; explicit non-empty reason otherwise"
+      coding: "explicit reference/focal declaration for binary states"
+      provenance: "named source declaration; runtime file SHA is optional"
+      metadata: "mutable non-authoritative annotations"
+      branch_state_identity: "semantic identity excluding mutable metadata"
+    invariants:
+      - "taxon trait is not branch state"
+      - "scientific branch keys are never normalized, guessed, case-folded, or position-matched"
+      - "available values are present and valid for the declared type"
+      - "unavailable or unresolved values are NA with an explicit reason"
+      - "binary effect direction is explicit focal minus reference"
+      - "continuous values are finite and never automatically transformed"
+      - "T2A consumes declared state and does not perform ASR"
+  lt_association_domain:
+    fields:
+      domain_id: "stable Layer-5 domain identifier"
+      gene_ids: "ordered exact scientific gene keys"
+      branch_ids: "ordered exact scientific branch keys"
+      domain_mode: "NATIVE_ASSOCIATION_DOMAIN or COMMON_ASSOCIATION_DOMAIN"
+      rate_identities: "one exact semantic identity per requested representation"
+      branch_state_identity: "exact semantic dependency identity"
+      eligible: "compact logical gene-by-branch Layer-5 mask"
+      reason: "compact integer reason codes"
+      reason_levels: "eligible, rate_unavailable, trait_unavailable, branch_user_excluded"
+      state_index: "exact-key mapping from rate order to branch-state order"
+      reason_counts: "machine-readable Layer-5 reason ledger"
+      association_domain_identity: "semantic domain identity"
+      provenance: "exact-key and no-alias matching contract"
+      metadata: "mutable non-authoritative annotations"
+    invariants:
+      - "Layers 1 through 4 are consumed but never rewritten"
+      - "native domain uses one representation availability mask"
+      - "common domain intersects every requested representation before comparison"
+      - "small key mismatch warns and uses only exact intersection unless strict error is requested"
+      - "position-only, fuzzy, display-label, or node-number matching is forbidden"
+  lt_association:
+    fields:
+      association_id: "stable result identifier"
+      rate_representation: "response representation"
+      rate_identity: "exact semantic rate dependency"
+      branch_state_identity: "exact branch-state dependency"
+      association_domain_identity: "exact Layer-5 dependency"
+      trait_type: "binary or continuous"
+      estimand: "unweighted OLS slope or focal-minus-reference mean difference"
+      effect_direction: "declared units/direction; never inferred from lexical order"
+      gene_ids: "complete ordered gene ledger including non-estimable genes"
+      status: "explicit per-gene estimability state"
+      reason: "explicit per-gene status reason"
+      estimates: "point estimates only"
+      descriptive_scores: "correlations and descriptive R-squared"
+      domain_counts: "per-gene eligible counts"
+      inference_status: "POINT_ESTIMATE_ONLY"
+      significance_calibration: "NOT_PERFORMED"
+      provenance: "unweighted/no-transform/association-not-prediction declarations"
+      metadata: "mutable non-authoritative annotations"
+    invariants:
+      - "rate is response and branch state is predictor"
+      - "rate construction remains trait independent"
+      - "no automatic scaling, weighting, trimming, winsorization, replacement, or pseudocount"
+      - "every gene remains represented with explicit non-estimability status"
+      - "no p-value, q-value, FDR, confidence interval, causality, or prediction claim"
+  lt_branch_state_ensemble:
+    fields:
+      ensemble_id: "stable external null-ensemble identifier"
+      trait_id: "exact observed trait-concept identifier"
+      branch_ids: "ordered unique exact scientific branch keys"
+      replicate_ids: "ordered unique coherent null-world identifiers"
+      values: "atomic branch-by-replicate matrix"
+      type: "binary or continuous"
+      coding: "explicit binary reference/focal semantics when binary"
+      availability: "branch-by-replicate available, unavailable, or unresolved states"
+      null_hypothesis: "scientific hypothesis supplied by external authority"
+      generator_provenance: "generator, program, version, model, parameters, seed, tree, trait, conditioning, constraints, source, and notes when known"
+      observed_realization_included: "required FALSE; the observed realization is not a null replicate"
+      null_ensemble_identity: "semantic identity excluding mutable metadata"
+      metadata: "mutable non-authoritative annotations"
+    invariants:
+      - "one column is one complete null world shared across every gene"
+      - "T2B never shuffles, simulates, permutes, or otherwise generates null worlds"
+      - "scientific branch keys are exact; column and row positions are not identities"
+      - "available continuous values are finite and receive no transform, scaling, centering, or imputation"
+      - "binary coding is explicit and matches observed reference/focal semantics"
+      - "the observed realization is not inserted into the ensemble"
+  lt_calibration_spec:
+    fields:
+      statistic: "beta, pearson_r, spearman_rho, or point_biserial_r"
+      alternative: "greater, less, or two_sided"
+      domain_mode: "NATIVE_ASSOCIATION_DOMAIN or COMMON_ASSOCIATION_DOMAIN"
+      nonestimable_null_policy: "fail_closed"
+      multiple_testing: "none, BH, BY, Holm, or Bonferroni request; never applied automatically"
+      calibration_spec_identity: "semantic specification identity"
+      metadata: "mutable non-authoritative annotations"
+    invariants:
+      - "the association-statistic neutral point is zero"
+      - "tail comparisons use inclusive ties and never assume null symmetry"
+      - "binary and continuous statistics have explicit allowed vocabularies"
+  lt_calibration:
+    fields:
+      calibration_id: "stable result identifier"
+      association_identity: "exact observed T2A result dependency"
+      rate_identity: "exact semantic rate dependency"
+      branch_state_identity: "exact observed branch-state dependency"
+      null_ensemble_identity: "exact external ensemble dependency"
+      calibration_spec: "first-class lt_calibration_spec"
+      gene_ids: "complete ordered gene ledger"
+      observed_statistic: "selected T2A point statistic"
+      null_replicate_count: "declared R retained for every gene"
+      exceedance_count: "inclusive-tail count only for complete calibrations"
+      p_empirical: "plus-one empirical p-value; never zero"
+      p_resolution: "1/(R+1)"
+      monte_carlo_se: "descriptive Monte-Carlo precision sqrt(p*(1-p)/(R+1))"
+      calibration_status: "explicit CALIBRATED or fail-closed non-estimability/domain/numeric state"
+      reason: "explicit per-gene status reason"
+      domain_identity: "frozen T2A association-domain identity"
+      provenance: "streaming/no-generation/exact-key/neutral-point declarations"
+      metadata: "mutable non-authoritative annotations"
+    invariants:
+      - "the frozen observed gene-specific domain is fixed before null scores are inspected"
+      - "replicate-specific missingness never silently changes sample size"
+      - "one null world is applied to all genes and may be reused unchanged across representations"
+      - "non-estimable null replicates release no empirical p-value for the affected gene"
+      - "the engine streams by replicate and does not require a gene-by-replicate score matrix"
+      - "historical finite logGBI remains explicit replay-only; current boundary components are calibrated separately"
+      - "calibration computation validity is distinct from null-generator scientific validity"
+  lt_calibration_adjustment:
+    fields:
+      calibration_identity: "exact source calibration dependency"
+      adjustment_method: "none, BH, BY, Holm, or Bonferroni"
+      family_identity: "one trait x rate x domain mode x statistic x alternative family"
+      n_tests: "number of CALIBRATED genes in the family"
+      gene_ids: "complete source gene ledger"
+      adjusted_p: "adjusted values for CALIBRATED genes and NA otherwise"
+      procedure_class: "no-adjustment, FDR, or FWER description"
+      provenance: "explicit family and dependence boundary"
+      metadata: "mutable non-authoritative annotations"
+    invariants:
+      - "multiple-testing adjustment is separate and never automatic"
+      - "BH is not claimed universally valid under arbitrary dependence"
+      - "BY is exposed as a conservative arbitrary-dependence FDR procedure"
+      - "Holm and Bonferroni are FWER procedures, not FDR procedures"
+  lt_domain:
+    fields:
+      domain_id: "stable identifier"
+      taxon_ids: "ordered unique character vector"
+      eligible: "non-missing logical mask"
+      exclusion_reason: "character ledger aligned to taxa"
+      group: "group identifier aligned to taxa"
+      metadata: "named list"
+    invariants:
+      - "all domain vectors have identical lengths"
+      - "ineligible taxa require a non-empty exclusion reason"
+      - "eligible taxa must have an NA exclusion reason"
+      - "trait/domain compatibility is checked explicitly"
+  lt_rate_spec:
+    fields:
+      rate_id: "stable identifier"
+      method: "current production ADD_LT, GBI, or positive-only logGBI_strict; historical logGBI is read/migrate-only and rejected by ordinary validation/execution"
+      parameters: "named method-specific list"
+      trait_independent: "logical scalar"
+      input_scale: "declared input scale"
+      output_scale: "declared output scale"
+      metadata: "named list"
+      production_baseline: "C3_nonnegative_raw_scale_working_mean for production methods"
+      rate_spec_id: "deterministic normalized specification SHA-256"
+    invariants:
+      - "C2 is never selectable as a production baseline"
+      - "production rate specs are trait independent"
+      - "no pseudocount, trimming, winsorization, trait, or baseline-switch parameter"
+  lt_rate:
+    fields:
+      rate_spec: "production or explicitly sensitivity-labelled specification"
+      representation: "current ADD_LT, GBI, logGBI_strict, ADD_C2, GBI_C2, or logGBI_C2; historical read/migrate-only logGBI may be deserialized"
+      values: "numeric gene-by-branch matrix; unavailable cells are NA"
+      coord_state: "unchanged coordinate truth matrix"
+      value_reason: "compact representation-reason codes; not coordinate truth"
+      measurement_fit_eligibility: "separate aligned status/reason layer and hashes"
+      baseline_estimand: "C3 production or C2 sensitivity estimand"
+      baseline_fit_id: "exact certified fit identity"
+      baseline_mu_sha256: "certified/evaluation fitted-mean hash"
+      baseline_support_state: "compact separate baseline-support codes"
+      representation_availability: "aligned logical materialization mask"
+      representation_reason: "compact aligned reason codes"
+      zero_encoded: "historical finite-logGBI evidence only: TRUE encoded zero, FALSE positive, NA unavailable; not a current primary boundary authority"
+      ordered_gene_ledger: "exact ordered unique gene identifiers"
+      ordered_branch_ledger: "exact ordered unique branch identifiers"
+      ordered_cell_identity: "full-grid and available keyed identities"
+      coordinate_provenance: "unchanged source coordinate provenance"
+      representation_provenance: "operator, source identities, units, and prohibitions"
+      output_hashes: "deterministic hashes for every scientific layer"
+      metadata: "named list including production/sensitivity label"
+      gene_display_labels: "mutable labels aligned to stable scientific gene keys"
+      branch_display_labels: "mutable labels aligned to stable scientific branch keys"
+      semantic_object_sha256: "recomputed scientific identity excluding display labels and non-authoritative annotations"
+    invariants:
+      - "state layers are separate and cannot collapse into one NA mask"
+      - "input, axes, Layer-2, coordinate provenance, and baseline mu identities fail closed"
+      - "ordinary logGBI construction is disabled; legacy finite encoding is explicit replay only"
+      - "historical logGBI lt_rate objects remain readable and migratable but fail closed in every ordinary association/calibration route"
+      - "logGBI_strict is unavailable at Y=0 and preserves the old conditional-positive values"
+      - "finite zero-state encoding is not a pseudocount and does not change Y, mu, or GBI"
+      - "GBI is unavailable at mu=0"
+      - "ADD_LT remains available at certified zero-boundary mu"
+      - "new C3 GBI is dimensionless and not historical legacy GBI"
+      - "no pseudocount, QC threshold, trimming, trait, or RER path"
+      - "snapshot fingerprint mismatch is distinct from structural/scientific invalidity"
+  lt_log_relative:
+    fields:
+      representation_id: "log_relative_boundary"
+      positive_log_values: "finite numeric matrix only on POSITIVE cells"
+      ratio_state: "raw matrix with POSITIVE, EXACT_ZERO_BOUNDARY, UNAVAILABLE"
+      unavailability_reason: "separate raw compact scientific-cause ledger"
+      ordered_gene_ledger: "stable ordered scientific gene keys"
+      ordered_branch_ledger: "stable ordered scientific branch-coordinate keys"
+      measurement_fit_eligibility: "separate Layer-2 dependency and provenance"
+      semantic_identity: "normalized scientific boundary representation SHA-256"
+      audit_identity: "dependency, freshness, reconstruction, replay, and provenance SHA-256"
+      canonicalization_version: "LaTerra_R_serialization_v3_raw_code_order_v1; semantic/audit payloads are explicitly serialized with R version 3"
+    invariants:
+      - "exact-zero boundary requires certified admitted numerator exact zero and positive denominator"
+      - "post-division zero or uncertain underflow never establishes exact-zero boundary"
+      - "exact_zero is derived as FALSE, TRUE, NA for POSITIVE, EXACT_ZERO_BOUNDARY, UNAVAILABLE"
+      - "no finite sentinel is stored in the primary object"
+      - "display labels and non-authoritative metadata are excluded from validity identities"
+      - "ZERO_MASS and POSITIVE_LOG are separate binary estimands with no joint p-value"
+      - "legacy_global_k10 is an explicit derived replay view with default continuous inference FALSE"
+      - "semantic and audit identities use explicit R serialization version 3 while historical package-wide identities remain unchanged"
+  lt_logGBI_encoded:
+    status: "historical diagnostic/replay view; refused by ordinary inference and never a current primary rate representation"
+    fields:
+      values: "finite positive-log payload plus exact frozen sentinel on boundary cells; NA on unavailable cells"
+      ratio_state: "aligned authoritative compact POSITIVE, EXACT_ZERO_BOUNDARY, UNAVAILABLE state"
+      source_object_identity: "identity record binding source semantic/audit, axes, state, positive-log payload, and representation contracts"
+      m_ref: "strictly positive finite minimum GBI from the complete source authority"
+      L_min_plus: "exact natural log of source m_ref"
+      sentinel: "exact L_min_plus minus 10 historical replay coordinate"
+      m_ref_provenance: "full-source identity record; subsetting cannot replace or recompute m_ref"
+      positive_domain_identity: "keyed identity of POSITIVE cells in this derived view"
+      exact_zero_identity: "keyed identity of EXACT_ZERO_BOUNDARY cells in this derived view"
+      encoded_identity: "derived-view payload identity; not a scientific primary-object identity"
+      structural_validation: "local consistency only; does not certify source identity, replay identity, or inference authority"
+      source_bound_validation: "requires separately supplied lt_log_relative and independently re-derives axes, state, positive values, m_ref, sentinel, and source identities"
+      replay_validation: "requires a separately frozen external replay authority and computes no association statistic"
+    invariants:
+      - "m_ref is finite and greater than zero"
+      - "L_min_plus equals log(m_ref) and sentinel equals L_min_plus minus 10"
+      - "boundary cells equal sentinel, positive cells retain positive_log_values, and unavailable cells remain NA"
+      - "exact-key subsets preserve the original full-source m_ref, L_min_plus, sentinel, and source-domain provenance"
+      - "ordinary domain, association, calibration, adjustment, and internal-score routes always refuse this class"
+      - "no acknowledgement, token, provenance edit, configuration edit, or direct internal call can authorize inference"
+      - "self-hashes detect accidental corruption but do not authenticate provenance"
+      - "coordinated payload and local-hash edits fail against a separately fixed source or replay authority"
+  lt_c2_domain:
+    fields:
+      fit_mask: "observed, Layer-2 eligible, finite Y>0"
+      evaluation_mask: "observed, Layer-2 eligible, finite Y>=0"
+      components: "positive-cell bipartite connected-component ledger"
+      unsupported_vertices: "zero-positive-degree gene/branch ledger"
+      hashes: "matrix, Layer-2, axes, fit/evaluation domain, component, and provenance identities"
+    invariants:
+      - "exact zeros are excluded from fit with no pseudocount"
+      - "fit and baseline-evaluation domains are distinct"
+  lt_c2_fit:
+    fields:
+      gene_log_effect: "component-gauge-dependent log gene effects"
+      branch_log_effect: "component-gauge-dependent log branch effects"
+      fit_mu: "positive fit-cell baseline values only"
+      evaluation_mu: "supported same-component eligible observed values only"
+      baseline_availability: "evaluation-ledger availability"
+      baseline_reason: "unsupported/cross-component/numeric reason codes"
+      certificates: "per-component objective, normal equations, gauge, solver and hashes"
+      semantic_fit_sha256: "recomputed top-level scientific fit identity"
+    invariants:
+      - "C2 is sensitivity_estimand C2_positive_cell_log_OLS, never production"
+      - "each positive component has its own mean-branch-log-effect-zero gauge"
+      - "factor values are gauge dependent but fitted mu is gauge invariant"
+      - "no cross-component product is materialized"
+      - "failed convergence, normal equations, gauge, or replay releases no baseline"
+  lt_rate_common_domain:
+    fields:
+      source_domains: "ordered representation inclusion/exclusion counts and hashes"
+      common_linear: "exact source-order intersection ledger"
+      common_cell_sha256: "key-order-invariant common-cell identity"
+      ordered_gene_ledger: "compact scientific gene axis required for self-validation"
+      ordered_branch_ledger: "compact scientific branch axis required for self-validation"
+      gene_display_labels: "mutable display labels outside the semantic identity"
+      branch_display_labels: "mutable display labels outside the semantic identity"
+      reason_counts: "per-representation exclusion-reason counts"
+      full_domain_label: "EQUAL_DOMAIN_DESCRIPTIVE or UNEQUAL_DOMAIN_DESCRIPTIVE"
+    invariants:
+      - "paired comparisons use exact keyed common domains"
+      - "domain loss is not estimator-performance evidence"
+  lt_rate_diagnostic:
+    fields:
+      representation: "source lt_rate representation"
+      baseline_estimand: "unchanged source baseline estimand"
+      neutral_value: "zero for additive/log forms and one for quotient forms"
+      native_summary: "threshold-free native-domain distribution and departure summary"
+      exact_repetition: "global finite minimum/maximum exact repetition with neutral interpretation"
+      zero_loss: "representation availability-loss accounting, never bad-data removal"
+      zero_encoded_count: "explicit zero-state count and fraction in global/gene/branch summaries"
+      gene_summary: "one row per stable scientific gene key"
+      branch_summary: "one row per stable scientific branch key"
+      extreme_ledger: "bounded descriptive rankings keyed by gene and branch"
+      compatibility: "NOT_REQUESTED or CURRENT; stale decomposition fails closed"
+      provenance: "diagnose-only prohibitions and performance strategy"
+      semantic_diagnostic_sha256: "runtime scientific identity, not a required external file fingerprint"
+      metadata: "mutable ordinary annotations outside semantic validity"
+    invariants:
+      - "diagnosis is trait-free, threshold-free, and never changes availability or Layer-2"
+      - "no trimming, winsorization, normal-outlier classification, or upstream-cause inference"
+      - "source/baseline decomposition requires explicit compatible objects and never repairs keys"
+      - "unusual is not error; extreme is not artifact; long branch is not anomalous"
+      - "ordinary runtime use does not require a pre-registered frozen-file SHA-256"
+  lt_analysis_spec:
+    fields:
+      analysis_id: "stable identifier"
+      rate: "lt_rate_spec"
+      branch_state: "named list"
+      screen: "named list"
+      preprocess: "named list"
+      validation: "named list"
+      model: "named list"
+      null_model: "list of zero or more named module lists"
+      outputs: "named list"
+      metadata: "named list"
+  lt_run:
+    fields:
+      run_id: "stable identifier"
+      matrix: "optional lt_matrix"
+      trait: "optional lt_trait"
+      domain: "optional lt_domain"
+      analysis_spec: "optional lt_analysis_spec"
+      config: "empty list for an unattached draft, otherwise a fully validate_lt_config-validated configuration"
+      provenance: "complete audit container"
+      status: "draft, configured, running, completed, or failed"
+      results: "named list"
+    certification_invariant: >-
+      A completed run records computational state only and never implies
+      scientific certification or a La Terra self-certified PASS.
+    config_invariants:
+      - "every non-empty config is validated before construction and again at validation, write, and read boundaries"
+      - "historical rate method logGBI cannot enter or be resurrected through an lt_run"
+    provenance_fields:
+      - input_sha256
+      - configuration_sha256
+      - software_version
+      - environment
+      - ordered_gene_ledger
+      - ordered_branch_ledger
+      - taxon_domain_ledger
+      - eligibility_masks
+      - specification_ledger
+      - filter_ledger
+      - seed_ledger
+      - fold_ledger
+      - commands
+      - output_hashes
+    ledger_contracts:
+      specification_ledger: "specification_id, kind, version, definition, sha256"
+      filter_ledger: "order, stage, decision_id, target_type, target_id, decision, reason"
+      seed_ledger: "scope, seed, rng_kind, normal_kind, sample_kind, r_version"
+      fold_ledger: "fold_id, taxon_id, role, group"
+  lt_c3_domain:
+    fields:
+      measurement_fit_eligibility: "separate eligible/ineligible/unresolved/not_applicable matrix"
+      measurement_fit_reason: "separate stable reason matrix"
+      payload_state: "finite_positive, exact_zero, nonfinite, negative, coordinate_no_payload"
+      fit_mask: "observed AND eligible AND finite AND nonnegative"
+      ordered_cell_ledger: "branch-outer, gene-inner admitted coordinates"
+    invariants:
+      - "exact numeric zero is admitted without a pseudocount"
+      - "diagnostic warnings cannot mutate eligibility"
+      - "default eligible_declared is a domain declaration, not upstream-QC certification"
+      - "non-observed coordinates are Layer-2 not_applicable with reason coordinate_not_observed"
+      - "observed coordinates cannot use Layer-2 not_applicable"
+  lt_c3_fit:
+    primary_output: "edge-aligned supported fitted mean mu"
+    component_states:
+      - FINITE_INTERIOR
+      - UNSUPPORTED_VERTEX
+      - ZERO_MARGIN_BOUNDARY
+      - ZERO_TOTAL_COMPONENT
+      - FACIAL_BOUNDARY
+      - NUMERICALLY_INDETERMINATE
+    invariants:
+      - "connectivity and convergence are not existence certificates"
+      - "minimal face is certified by exact residual-SCC primal/dual evidence"
+      - "one deterministic gauge per final positive component"
+      - "no cross-component or off-domain product"
+      - "held required components release no partial production mu"
+  lt_qc_spec:
+    fields:
+      profile: "standard or custom"
+      behavior: "DIAGNOSE_ONLY"
+      value_domain: "auto, signed, nonnegative, or positive"
+      outlier_rules: "explicit optional custom-profile rules: none, quantile, IQR, MAD, absolute, or custom mask"
+      quantile_tie_semantics: "strict or inclusive; exact_rank parked and not implemented"
+      leverage_parameters: "top-k, top-fraction, and tail fractions"
+      diagnostic_spec_id: "deterministic SHA-256 of normalized procedure"
+    invariants:
+      - "thresholds are procedure parameters, not universal truths"
+      - "standard profile is threshold-free and diagnose-only"
+      - "outlier is not error"
+      - "long branch is not anomalous cell"
+      - "trim is not diagnosis"
+      - "flags may emit INFO or WARNING, never HOLD"
+      - "zero remains valid input with no pseudocount"
+  lt_diagnostic:
+    fields:
+      diagnostic_spec_id: "frozen lt_qc_spec identity"
+      matrix_identity: "values, states, reasons, and ordered-axis hashes"
+      payload_identity: "typed payload and SHA-256"
+      cell_summary: "state/domain and identity-keyed top-leverage summaries"
+      future_diagnostics: "parked diagnostic-only two-axis fields within_gene_percentile and within_branch_percentile"
+      gene_summary: "ordered per-gene availability, distribution, and concentration"
+      branch_summary: "ordered per-branch availability, distribution, and concentration"
+      matrix_summary: "overall distribution, tails, leverage, top-N point masses, global finite extreme exact-repetition counts/fractions, and metric domains"
+      flags: "identity-keyed diagnostic flag ledger"
+      warnings: "INFO/WARNING ledger"
+      holds: "established structural/mathematical contradictions only"
+      threshold_config: "normalized rule ledger"
+      diagnostic_provenance: "diagnose-only and immutability contract"
+      output_hashes: "deterministic summary and ledger hashes"
+    invariants:
+      - "flagged is not ineligible"
+      - "warning is not exclusion"
+      - "outlier is not error"
+      - "diagnosis does not modify raw matrix or Layer-2"
+      - "signed concentration uses explicitly named absolute variants"
+      - "positive-only domain loss never changes input values"
+      - "global finite extrema are reported outside top-N frequency ranking with no upstream cause inferred"
+      - "QC application preserves selected already-ineligible status and reason"
+      - "selected unresolved prior state is retained in application provenance"
+      - "selected not-applicable cells fail closed"

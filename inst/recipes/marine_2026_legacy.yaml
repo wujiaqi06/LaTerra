@@ -1,0 +1,234 @@
+schema_version: "1.1.0"
+recipe_id: "marine_2026_legacy"
+description: >-
+  Non-executing reference configuration for the frozen marine-specialization
+  analysis. Values describe the existing manuscript workflow; they do not
+  authorize execution, define a new estimator, or certify a result.
+execution:
+  enabled: false
+  scientific_algorithms_implemented: false
+  stop_reason: "LT001-A1A hardens architecture only"
+authority:
+  contract_version: "marine_2026_legacy_authority/1.0.0"
+  records:
+    - role: "scientific_specification"
+      identity: "marine_mammal_paper.NC_revise.pdf"
+      sha256: "90e79077fe1472eefb5efdb41cdfcc034c69e31fdd7f3a46dbc79fbbd2b72a4b"
+      governs: "what the manuscript claims was done"
+    - role: "executable_reference"
+      identity: "MarineMammal_NC_software_submission_v1.2_20260807_102310.zip"
+      sha256: "3f734be2a1777c39f3a1c5a0a86c7690eaf0e474d7d3fe06c128a455e3aea80e"
+      governs: "editor/reviewer-stage executable reference, environment, smoke tests, and manifest"
+    - role: "data_result"
+      identity: "Dryad_ready_data.zip from Dryad_GitHub_NC_update_preparation_20260807_102950"
+      sha256: "ce0e11361430e58c3093cba8ccefd3cd867095556e17bf8542bc84b04857159f"
+      governs: "frozen data and result artifacts"
+    - role: "source_code_identity"
+      identity: "marine_mammal Git identity"
+      tag: "v1.1-nc-submission"
+      tag_object: "bfecb8f43c8e366cef9b7cf787a8c7f80c409f88"
+      peeled_commit: "d93e70ee9fdf3ebaaa3ac4ac787856549bfa2a24"
+      governs: "source history and exact code identity"
+matrix:
+  input:
+    path: "Dryad_ready_data/17_large_matrix_archives/branch_coordinate_matrices.tar.gz"
+    sha256: "1dcc4bdbec568c3e02a17077a528ecc40ecfe1598c98de23195d215b4e046552"
+    format: "archive_member"
+    member: "fix_17434.matrix_no_fuse.oldlabels.txt"
+    member_sha256: "3ec73fa19d2706d6ff86f397e1235f1303f6364f7cfb422189d0bd3917551a7e"
+    gene_axis: "rows"
+    branch_axis: "columns"
+    gene_id_column: "Gene"
+  payload:
+    type: "branch_length"
+    name: "fixed_topology_gene_tree_branch_length"
+    units: "substitutions_per_site"
+    scale: "linear_nonnegative"
+    origin: "imported"
+    spec_id: null
+  coord_state:
+    mode: "separate_input"
+    input:
+      path: "Dryad_ready_data/17_large_matrix_archives/branch_coordinate_matrices.tar.gz"
+      sha256: "1dcc4bdbec568c3e02a17077a528ecc40ecfe1598c98de23195d215b4e046552"
+      format: "archive_member"
+      member: "17434.fix.na_classified.oldlabels.txt"
+      member_sha256: "d83b1bbb4f4ae124bd4e385f52ccd681c0ef9d1094464f7517753af1b3d00685"
+    allowed_states: ["observed", "NA_struct", "NA_fuse", "NA_topo", "residual_NA"]
+    numeric_zero_is_observed: true
+  value_reason:
+    mode: "none"
+  coordinate_provenance:
+    coordinate_system: "SplitAligner projected species-tree branch coordinates"
+    reference_tree_path: "Dryad_ready_data/01_species_tree/species_tree.forSplit.nwk"
+    reference_tree_sha256: "bb046d5072a6e86841515dd77b76b4b09cb113f22883d181aac63660e530dc68"
+    ordered_branch_ledger_sha256: "60e4025ea351375f3f29f77655979342b09db9492ca5e6e7960ffc7ead9e488e"
+    ordered_taxon_ledger_sha256: "5f3d111d29651c038ac4d146025b776420ef0e4cf5fa4ed2661bd04e34d12beb"
+    ledger_hash_canonicalization: "UTF-8 identifiers, one per line, LF endings, final LF; branches B1-B601; terminal taxa in branch-map order"
+    branch_label_contract: "marine_2026_legacy old-label order B1-B601"
+    source_method: "fixed-topology SplitAligner coordinate projection"
+    source_software: "SplitAligner"
+    source_version: "v1.2.0"
+    source_commit: "4337e2cb62ac24238246893e85e3d2a5a51c8a7a"
+    mapping_artifact:
+      path: "Dryad_ready_data/01_species_tree/species_tree.branch_map.txt"
+      sha256: "ec769cd16fb27e93e9f962a4320b95ee56e3de5eb00ee6398bacbe7c3a9edef9"
+      format: "tsv"
+    already_mapped: true
+    recompute_coordinates: false
+trait:
+  input:
+    path: "Dryad_ready_data/00_traits_and_species/trait_table.mammal302.active_TY_NK_final_18pt.tsv"
+    sha256: "b7b04906d074bb2bd8f82b5b646fcd76b1b880e566ef6cb8a0cf0ef54ed0ccd2"
+    format: "tsv"
+  trait_id: "marine_binary"
+  taxon_id_column: "species"
+  value_column: "marine_binary"
+  type: "binary"
+  coding:
+    positive: 1
+    background: 0
+    expected_positive_taxa: 51
+    expected_background_taxa: 251
+domain:
+  observation_level: "terminal_taxa"
+  eligible_values: [0, 1]
+  excluded_values: []
+  grouping:
+    unit: "genus"
+    derivation: "first underscore-delimited token of species identifier"
+rate:
+  enabled: true
+  method: "legacy_gbi_ratio"
+  contract_version: "marine_2026_legacy_gbi/1.0.0"
+  parameters:
+    rate_id: "marine_2026_legacy_gbi"
+    trait_independent: true
+    input_scale: "fixed-topology coordinate-valid branch lengths"
+    output_scale: "GBI = trimmed length / (branch effect * gene effect)"
+    within_gene_upper_tail_quantile: 0.975
+    trim_rule: "values at or above quantile become missing"
+    branch_effect: "arithmetic mean of non-missing trimmed values by branch"
+    gene_effect: "arithmetic mean of non-missing trimmed values by gene"
+    non_finite_output: "missing"
+branch_state:
+  enabled: true
+  method: "deterministic_maximum_parsimony"
+  contract_version: "marine_2026_legacy_branch_state/1.0.0"
+  parameters:
+    implementation: "castor::asr_max_parsimony"
+    ties:
+      method: "first"
+      state_order: [0, 1]
+    mapping: "descendant-node state assigned to each branch"
+    main_scope: "global frozen trait-derived annotation; 97 positive and 504 background branches"
+    sensitivity:
+      foldwise_enabled: true
+      implementation: "castor::hsp_max_parsimony"
+      held_out_terminal_labels: "masked before ASR"
+screen:
+  enabled: true
+  method: "welch_two_sample_t_test"
+  contract_version: "marine_2026_legacy_screen/1.0.0"
+  parameters:
+    sidedness: "two-sided"
+    missing_values: "gene-wise available finite values; no imputation"
+    minimum_group_size: 2
+    direction: "background mean minus trait mean; positive is slow"
+    fdr:
+      method: "sorted Benjamini-Hochberg legacy rule"
+      alpha: 0.01
+      comparison: "p_sorted[k] < k / m * alpha"
+      selection: "advance from rank 1 while the strict inequality holds; retain the passing prefix"
+    nested_behavior:
+      global_screen: "all 601 branches"
+      outer_fold_screen: "remove held-out-genus terminal branches; retain internal branches"
+preprocess:
+  enabled: true
+  method: "foldwise_gene_mean_center_scale"
+  contract_version: "marine_2026_legacy_preprocess/1.0.0"
+  parameters:
+    sample_level: "terminal species only"
+    imputation:
+      method: "gene mean"
+      learned_from: "eligible training terminal species only within folds"
+      interpretation: "numeric placeholder, not a branch-rate estimate"
+    scaling:
+      method: "manual center and scale"
+      learned_from: "eligible training terminal species only within folds"
+    feature_exclusion: ["all missing in training", "zero variance in training"]
+validation:
+  enabled: true
+  method: "nested_genus_leave_one_out"
+  contract_version: "marine_2026_legacy_validation/1.0.0"
+  parameters:
+    outer_resampling:
+      method: "genus-level leave-one-out"
+      test_unit: "all eligible terminal species in one genus"
+    nesting:
+      supervised_feature_selection: true
+      imputation_scaling_lambda_model: true
+      gbi_construction: false
+      frozen_main_asr: true
+    held_out_handling:
+      terminal_branches_removed_from_screen: true
+      internal_branches_retained_in_screen: true
+    metric:
+      name: "rank-based AUC"
+      ties: "average ranks"
+      pooling: "finite out-of-fold predictions"
+model:
+  enabled: true
+  method: "lasso_binomial"
+  contract_version: "marine_2026_legacy_model/1.0.0"
+  parameters:
+    engine: "glmnet"
+    family: "binomial"
+    penalty: "LASSO"
+    alpha: 1.0
+    lambda_selection:
+      engine: "cv.glmnet"
+      choice: "lambda.min"
+      type_measure: "deviance"
+      inner_folds: "one training terminal species per fold"
+    standardize: false
+null_model:
+  - enabled: true
+    method: "positive_count_permutation"
+    contract_version: "marine_2026_legacy_positive_count_null/1.0.0"
+    parameters:
+      target_comparison: "drop Cetacea marine single-gene screen"
+      terminal_design: "17 positive / 251 background"
+      permutations: 200
+      seed: 20260520
+      rerun_branch_state: true
+      statistics: ["FDR-significant count", "slow proportion when defined"]
+      empirical_p: "upper tail with +1 correction"
+  - enabled: true
+    method: "predictor_turnover"
+    contract_version: "marine_2026_legacy_predictor_turnover/1.0.0"
+    parameters:
+      target_comparison: "marine baseline versus Cetacea only"
+      permutations: 10000
+      gene_universe: "union of comparison-specific full-data candidate genes"
+      module_universe: "module-annotated subset of candidate-gene union"
+      metrics: ["gene Jaccard", "module-presence Jaccard", "module-count cosine"]
+      empirical_p: "upper tail with +1 correction"
+outputs:
+  root: "REQUIRED_WRITABLE_OUTPUT_ROOT/marine_2026_legacy"
+  formats: ["tsv", "rds", "yaml"]
+  required_provenance:
+    - input_sha256
+    - configuration_sha256
+    - software_version
+    - environment
+    - ordered_gene_ledger
+    - ordered_branch_ledger
+    - taxon_domain_ledger
+    - eligibility_masks
+    - specification_ledger
+    - filter_ledger
+    - seed_ledger
+    - fold_ledger
+    - commands
+    - output_hashes
