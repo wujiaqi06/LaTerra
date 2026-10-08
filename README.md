@@ -73,16 +73,20 @@ must be represented, and the fold table must cover every group, including
 those containing only excluded species. Prepare the coding, groups and fold
 order before running; La Terra uses these choices as supplied.
 
-Choose an analysis recipe and a validation design with `lt_binary_recipes()`.
-The example below uses `submitted_S2` with `nested_phase13`; their meanings
-are explained in [Analysis recipes](#analysis-recipes).
+Inspect the available analysis and validation settings with `lt_binary_recipes()`.
+The example below selects the current recipe with nested validation; the
+scientific choices are explained in [Analysis recipes](#analysis-recipes).
 
 ```r
 library(LaTerra)
+settings <- subset(lt_binary_recipes(), validation_recipe == "nested_phase13")
+stopifnot(nrow(settings) == 1L)
+
 input <- lt_import("/path/to/exchange.rds")
 trait <- lt_read_trait("/path/to/trait.tsv", trait_name = "my_trait")
 run <- lt_run_binary(input, trait, "/path/to/groups.tsv", "/path/to/folds.tsv",
-                     recipe = "submitted_S2", validation_recipe = "nested_phase13",
+                     recipe = settings$recipe,
+                     validation_recipe = settings$validation_recipe,
                      output_dir = "/path/to/new_binary_run")
 ```
 
@@ -134,7 +138,7 @@ preflight, table formats, recipes and result boundaries.
 A recipe records the scientific choices used in an analysis. Select it
 explicitly so that the same choices can be inspected and repeated.
 
-`submitted_S2` preserves the analysis recipe of the 2026 marine-mammal study.
+The current binary-trait recipe uses a trimmed arithmetic baseline.
 Within each gene, values at or above the 97.5% quantile (R type 7) are excluded.
 For the remaining values, GBI is calculated by dividing each branch length
 first by its branch arithmetic mean and then by its gene arithmetic mean.
@@ -159,10 +163,10 @@ Choose the validation design separately:
 These recipes reproduce specified analyses. Their trimming and screening
 rules should be assessed for the dataset and scientific question at hand.
 
-## Historical Marine/S2 replay (worked example)
+## Worked example: marine mammals
 
-The Marine workflow reproduces the study-specific downstream analyses from
-frozen inputs. Use `lt_run_marine()` for the baseline and gene screens,
+The marine-mammal example reproduces the downstream analyses from a fixed
+input bundle. Use `lt_run_marine()` for the baseline and gene screens,
 `lt_run_marine_m2()` for the full computation, and
 `lt_export_marine_tables()` to export tables from a completed run without
 refitting. The [Marine replay guide](inst/workflow/MARINE_REPLAY.md) describes
@@ -171,11 +175,11 @@ the baseline inputs and output files; the
 input bundle and computation. `?lt_run_marine` and `lt_marine_profile()`
 also describe the baseline entry and its required inputs.
 
-Frozen input snapshot checks and historical computation-order/serialization
-rules are specific to this Marine replay route. The trimming, GBI, ancestral
-annotation and screening rules of `submitted_S2` also apply when that recipe
-is explicitly selected for other datasets. Completion is recorded separately
-from comparisons with the historical reference results.
+To reproduce the reference results, this workflow checks the input snapshots
+and preserves the recorded computation and serialization settings. The same
+trimming, GBI, ancestral-state annotation and screening rules can be applied
+to other datasets through the binary-trait workflow. Each run records
+completion separately from comparisons with the reference results.
 
 ## Scope and supported environments
 
