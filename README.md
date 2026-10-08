@@ -6,6 +6,8 @@ coordinate-valid matrix; scientific keys, value/state layers and provenance
 remain explicit. Marine/S2 is the first exact-replay historical example,
 not the ceiling of the framework's future scope.
 
+See [related work and recommended citations](#related-work-and-recommended-citations) for the methodological foundation, upstream software and related theory.
+
 ## Start with your own binary trait
 
 The usable development route imports a supported SplitAlignerR exchange,
@@ -186,3 +188,46 @@ current Marine/S2 V1 contract.
 
 The frozen architectural note is installed at
 `inst/doc/architecture-freeze.md`.
+
+## Related work and recommended citations
+
+La Terra builds on the gene-branch interaction approach of Wu, Yonezawa and
+Kishino (2017) and consumes branch-coordinate matrices produced by
+SplitAligner. The related graph-theoretic work below provides a formal
+account of cross-gene branch identity under fixed labelled inputs and
+conventions.
+
+### Primary recommended citations
+
+For analyses using La Terra with SplitAligner-derived matrices, we recommend
+citing both the foundational method and the upstream branch-mapping work:
+
+1. **Wu, J., Yonezawa, T., and Kishino, H. (2017).**
+   Rates of Molecular Evolution Suggest Natural History of Life History
+   Traits and a Post-K-Pg Nocturnal Bottleneck of Placentals.
+   *Current Biology*, **27**(19), 3025-3033.e5.
+   [https://doi.org/10.1016/j.cub.2017.08.043](https://doi.org/10.1016/j.cub.2017.08.043).
+   This is the methodological foundation for the gene-branch interaction
+   approach and rate-based trait reconstruction.
+
+2. **Wu, J. (2026).**
+   SplitAligner: A Gene-Species Tree Reconciliation Framework Using
+   Split-Based Branch Mapping.
+   *bioRxiv* preprint.
+   [https://doi.org/10.64898/2026.02.24.707838](https://doi.org/10.64898/2026.02.24.707838).
+   This describes the upstream branch-mapping framework used to construct
+   coordinate-aware matrices.
+   [Software repository](https://github.com/wujiaqi06/SplitAligner).
+
+### Related theoretical work
+
+3. **Wu, J. (2026).**
+   A Unique Graph-Theoretic Truth Table for Cross-Gene Branch Identity.
+   *bioRxiv* preprint.
+   [https://doi.org/10.64898/2026.07.22.740066](https://doi.org/10.64898/2026.07.22.740066).
+   This develops the graph-theoretic basis for a unique coordinate-and-state
+   ledger under fixed labelled inputs and conventions. Cite it when
+   discussing that theoretical foundation.
+
+For reproducibility, also report the exact La Terra version or commit and
+the upstream software versions used.
