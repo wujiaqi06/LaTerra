@@ -3,8 +3,7 @@
 La Terra is a matrix-first framework and evolving R-native platform for
 auditable branch-wise comparative genomics. Analyses start from a typed,
 coordinate-valid matrix; scientific keys, value/state layers and provenance
-remain explicit. Marine/S2 is the first exact-replay historical example,
-not the ceiling of the framework's future scope.
+remain explicit.
 
 See [related work and recommended citations](#related-work-and-recommended-citations) for the methodological foundation, upstream software and related theory.
 
