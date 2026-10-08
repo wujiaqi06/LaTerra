@@ -19,30 +19,42 @@ information needed to trace its results.
 
 ## Installation
 
-Use R 4.2 or later and start a fresh R session. The current importer requires
+Use R 4.2 or later and start a fresh R session. The current importer uses
 **SplitAlignerR 0.1.0.9002** with exchange schema **0.2.0-development**.
-The [SplitAlignerR repository](https://github.com/wujiaqi06/SplitAlignerR)
-currently has a different version on its default branch. A public source for
-the required backend has not yet been established for these instructions;
-installation therefore requires that you already have the matching
-SplitAlignerR and LaTerra source archives.
+The matching source archive is available from the
+[La Terra backend development prerelease](https://github.com/wujiaqi06/SplitAlignerR/releases/tag/v0.1.0.9002-laterra-dev).
+Use that archive rather than the SplitAlignerR default branch.
+Building the backend requires Rcpp and a C++17 compiler toolchain.
 
-Install into a separate library, replacing the archive paths with the files
-you obtained:
+The commands below install the matching backend and a fixed La Terra source
+revision into a separate library. They verify the backend archive before
+installation:
 
 ```r
 lib <- file.path(path.expand("~"), "R", "LaTerra-dev")
 dir.create(lib, recursive = TRUE, showWarnings = FALSE)
 .libPaths(c(lib, .libPaths()))
 
-install.packages(c("digest", "yaml", "ape", "castor", "glmnet", "ggplot2"),
-                 lib = lib)
-install.packages("/path/to/SplitAlignerR_0.1.0.9002.tar.gz",
-                 repos = NULL, type = "source", lib = lib)
-install.packages("/path/to/LaTerra_source.tar.gz",
-                 repos = NULL, type = "source", lib = lib)
+install.packages(c("digest", "yaml", "ape", "Rcpp", "castor", "glmnet",
+                   "ggplot2", "remotes"), lib = lib)
+backend <- tempfile(fileext = ".tar.gz")
+download.file(
+  "https://github.com/wujiaqi06/SplitAlignerR/releases/download/v0.1.0.9002-laterra-dev/SplitAlignerR_0.1.0.9002.tar.gz",
+  backend, mode = "wb"
+)
+stopifnot(identical(
+  digest::digest(file = backend, algo = "sha256", serialize = FALSE),
+  "c4fcc16cce3aaf90189a686b57dd0eadba2d20fccfd246d42deeef353f83522f"
+))
+install.packages(backend, repos = NULL, type = "source", lib = lib)
+remotes::install_github(
+  "wujiaqi06/LaTerra@134cc5b7f5e86f335ba74c7d2face6d9447142d0",
+  lib = lib, dependencies = FALSE, upgrade = "never", build_vignettes = FALSE
+)
 
 stopifnot(as.character(packageVersion("SplitAlignerR")) == "0.1.0.9002")
+stopifnot(identical(SplitAlignerR::splitaligner_exchange_schema()$schema_version,
+                    "0.2.0-development"))
 find.package("SplitAlignerR")
 library(LaTerra)
 ```

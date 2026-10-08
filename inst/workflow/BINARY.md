@@ -8,21 +8,21 @@ README is a historical example, not a future scope limit.
 
 ## Install and check the actual runtime
 
-Use a separate library for the matching development packages. Obtain trusted
-local source archives for LaTerra and SplitAlignerR 0.1.0.9002; no public
-archive URL is assumed here. A directory merely present on disk is not an
-installed package. Install the matching backend and this package into the
-chosen library, then check which version R actually loads.
+Install the matching development packages using the
+[public installation instructions](../../README.md#installation). They download
+SplitAlignerR 0.1.0.9002 from its development prerelease, verify its SHA256,
+and install a fixed La Terra revision into a separate library. The backend
+source archive is available at the
+[development prerelease](https://github.com/wujiaqi06/SplitAlignerR/releases/tag/v0.1.0.9002-laterra-dev).
+
+After installation, check the selected runtime in a fresh R session:
 
 ```r
-lib <- "/path/to/laterra-library"  # create deliberately before installation
+lib <- file.path(path.expand("~"), "R", "LaTerra-dev")
 .libPaths(c(lib, .libPaths()))
-install.packages(c("digest", "yaml", "ape", "castor", "glmnet", "ggplot2"), lib = lib)
-install.packages("/path/to/SplitAlignerR_0.1.0.9002.tar.gz",
-                 repos = NULL, type = "source", lib = lib)
-install.packages("/path/to/LaTerra_source.tar.gz",
-                 repos = NULL, type = "source", lib = lib)
 stopifnot(as.character(packageVersion("SplitAlignerR")) == "0.1.0.9002")
+stopifnot(identical(SplitAlignerR::splitaligner_exchange_schema()$schema_version,
+                    "0.2.0-development"))
 find.package("SplitAlignerR")
 library(LaTerra)
 ```
