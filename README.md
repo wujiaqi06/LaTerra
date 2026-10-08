@@ -1,18 +1,81 @@
 # La Terra: A Matrix-First Framework for Branch-Wise Comparative Genomics
 
-La Terra is a matrix-first framework and evolving R-native platform for
-auditable branch-wise comparative genomics. Analyses start from a typed,
-coordinate-valid matrix; scientific keys, value/state layers and provenance
-remain explicit.
+La Terra explores how molecular evolution varies across genes and branches,
+and how those patterns relate to organismal traits. Built for branch-length
+matrices from [SplitAligner](https://github.com/wujiaqi06/SplitAligner), it
+brings gene-level association screens, sparse predictive models and
+diagnostic plots into a single R workflow.
 
-See [related work and recommended citations](#related-work-and-recommended-citations) for the methodological foundation, upstream software and related theory.
+The analysis starts from a complete SplitAlignerR exchange: a gene × branch
+matrix, its species tree, branch-coordinate keys, cell states and provenance.
+These keys preserve each reference branch's identity across genes, while
+explicit states distinguish unavailable coordinates from observed values.
+You supply the trait table and, for grouped validation, the group and fold
+tables.
 
-## Start with your own binary trait
+La Terra is under development. The workflow described here supports binary
+traits and saves the input snapshots, analysis settings and software
+information needed to trace its results.
 
-The usable development route imports a supported SplitAlignerR exchange,
-reads explicit trait/group/fold tables, computes a selected S2 recipe, and
-reads its saved results. Neither recipe nor validation design is selected
-for you. Inspect the available contracts with `lt_binary_recipes()` first.
+## Installation
+
+Use R 4.2 or later and start a fresh R session. The current importer requires
+**SplitAlignerR 0.1.0.9002** with exchange schema **0.2.0-development**.
+The [SplitAlignerR repository](https://github.com/wujiaqi06/SplitAlignerR)
+currently has a different version on its default branch. A public source for
+the required backend has not yet been established for these instructions;
+installation therefore requires that you already have the matching
+SplitAlignerR and LaTerra source archives.
+
+Install into a separate library, replacing the archive paths with the files
+you obtained:
+
+```r
+lib <- file.path(path.expand("~"), "R", "LaTerra-dev")
+dir.create(lib, recursive = TRUE, showWarnings = FALSE)
+.libPaths(c(lib, .libPaths()))
+
+install.packages(c("digest", "yaml", "ape", "castor", "glmnet", "ggplot2"),
+                 lib = lib)
+install.packages("/path/to/SplitAlignerR_0.1.0.9002.tar.gz",
+                 repos = NULL, type = "source", lib = lib)
+install.packages("/path/to/LaTerra_source.tar.gz",
+                 repos = NULL, type = "source", lib = lib)
+
+stopifnot(as.character(packageVersion("SplitAlignerR")) == "0.1.0.9002")
+find.package("SplitAlignerR")
+library(LaTerra)
+```
+
+`parallel` is included with R. Computation uses `ape`, `castor` and `glmnet`;
+`ggplot2` is needed for plots. Marine spreadsheet export additionally requires
+`openxlsx`, `xml2` and `zip`. Building the upstream backend from source may
+require the compiler toolchain specified by that backend.
+
+Install LaTerra before running an analysis; source sessions created with
+`pkgload::load_all()` are not supported. See the
+[binary workflow guide](inst/workflow/BINARY.md#install-and-check-the-actual-runtime)
+for runtime checks and library selection.
+
+## Quick start: your own binary trait
+
+Begin with a SplitAlignerR exchange and three tab-separated tables:
+
+| Input | Contents |
+| --- | --- |
+| `exchange.rds` | Matrix, species tree, coordinates, cell states and provenance, exported together by SplitAlignerR. |
+| `trait.tsv` | Species names and a named numeric trait column: 0 and 1 for the two classes; optional 0.5 marks excluded species. |
+| `groups.tsv` | Species names and the groups used for validation, in columns `species` and `genus`. |
+| `folds.tsv` | The ordered validation folds, with columns `fold_id`, `genus` and `seed`. |
+
+Use species names exactly as they appear in the exchange. Both trait classes
+must be represented, and the fold table must cover every group, including
+those containing only excluded species. Prepare the coding, groups and fold
+order before running; La Terra uses these choices as supplied.
+
+Choose an analysis recipe and a validation design with `lt_binary_recipes()`.
+The example below uses `submitted_S2` with `nested_phase13`; their meanings
+are explained in [Analysis recipes](#analysis-recipes).
 
 ```r
 library(LaTerra)
@@ -23,13 +86,16 @@ run <- lt_run_binary(input, trait, "/path/to/groups.tsv", "/path/to/folds.tsv",
                      output_dir = "/path/to/new_binary_run")
 ```
 
-The trait table contains exact species keys and a named numeric 0/1 column;
-optional 0.5 means explicitly excluded. Both endpoint classes must be present.
-The grouping table supplies `species` and `genus`; the ordered fold table
-supplies `fold_id`, `genus` and `seed`, including excluded-only genera.
-No species-key normalization, trait recoding, grouping inference or fold
-generation occurs. The import keeps the complete matrix/tree/coordinate/
-upstream-evidence bundle, not only its numeric matrix.
+Keep the complete object returned by `lt_import()`: the tree, coordinates
+and provenance are part of the input. The parent output directory must
+already exist, and each run must use a new directory.
+
+The analysis represents branch-length variation as **GBI** (gene–branch
+interaction), using the baseline defined by the selected recipe. Gene
+screens and predictive models then assess its relationship with the trait;
+a GBI value alone is not a test of association.
+
+## Read, inspect and plot the results
 
 ```r
 result <- lt_read_binary_run(run)  # or the saved run directory; verifies hashes
@@ -38,155 +104,108 @@ report <- lt_report_binary(result, "/path/to/new_binary_report")
 lt_plot_binary(result, view = "oof")  # also "roc" or "trim"; requires ggplot2
 ```
 
-The report and plots read saved outputs only: no ASR, screens or models are
-refitted, and the run is not modified. Reports separate D1 input/QC counts,
-D2 trimming and domains, D3 branch/screen support, and D4 saved validation,
-folds, feature use and warnings. These are bounded diagnostics, not new QC
-decisions or scientific certification. Failed/partial runs expose unavailable
-dependencies explicitly as `not_run_or_incomplete`, never as successful results.
+Reports and plots read the saved results without refitting models or
+changing the analysis. They cover inputs and QC summaries, trimming and
+computable values, branch states and gene screens, and validation results
+with fold-level feature use and warnings. These sections are labelled
+D1–D4 in the report. Diagnostics help you inspect the analysis; they do not
+automatically change which observations are included. For a failed or
+partial run, results that could not be produced are shown as
+`not_run_or_incomplete`.
 
-For an installed synthetic example, locate
-`system.file("examples", "binary_small", package = "LaTerra")` and use its
-`exchange.rds`, `trait.tsv`, `groups.tsv` and `folds.tsv`. The runnable
-`examples/run_binary_small.R` script accompanies it; run it with
-`source(system.file("examples", "run_binary_small.R", package = "LaTerra"))`.
-It chooses new temporary output directories and prints their paths. Its 24 tips and 32 genes
-are synthetic algebraic inputs exported by the real producer; they are not
-biological evidence or a performance benchmark.
+To try the workflow with a small synthetic dataset, run:
 
-Imports currently require the exact SplitAlignerR **0.1.0.9002** backend for
-schema 0.2.0-development. A default library may contain incompatible 0.1.0;
-use an isolated R library and check the loaded version before importing.
-Computation requires `ape`, `castor` and `glmnet`; plotting adds `ggplot2`.
+```r
+source(system.file("examples", "run_binary_small.R", package = "LaTerra"))
+```
+
+The example contains 24 tips and 32 genes, exported through SplitAlignerR.
+Its four input files are installed under
+`system.file("examples", "binary_small", package = "LaTerra")`. The script
+creates new temporary run and report directories and prints their paths.
+This is a worked software example, not biological evidence or a performance
+benchmark.
+
 See [the binary workflow guide](inst/workflow/BINARY.md) for installation
-preflight, table formats, recipes and result boundaries. This is development
-software; completed computation does not imply release certification.
+preflight, table formats, recipes and result boundaries.
 
-## Historical Marine/S2 exact-replay workflow (M1 development)
+## Analysis recipes
 
-The study-specific entry point now computes the frozen S2 arithmetic baseline
-and GBI, deterministic branch annotations, and the marine/aquatic baseline
-Welch screens from raw inputs. It writes outputs and an audited `lt_run`:
+A recipe records the scientific choices used in an analysis. Select it
+explicitly so that the same choices can be inspected and repeated.
 
-```r
-library(LaTerra)
-run <- lt_run_marine(data_root = "/path/to/marine_inputs",
-                     output_dir = "/path/to/new_marine_run")
-run$results$screens
-```
+`submitted_S2` preserves the analysis recipe of the 2026 marine-mammal study.
+Within each gene, values at or above the 97.5% quantile (R type 7) are excluded.
+For the remaining values, GBI is calculated by dividing each branch length
+first by its branch arithmetic mean and then by its gene arithmetic mean.
+Both means are calculated after trimming; no grand-mean normalization is
+applied. The recipe also specifies the historical ancestral-state
+reconstruction and Welch screen with its strict-prefix FDR rule.
 
-Supply these three files beneath `data_root` (exact paths and snapshot hashes
-are available through `lt_marine_profile()`):
+GBI describes variation relative to this recipe's baseline. Values above or
+below 1 do not, by themselves, establish a biological rate shift. Observed
+zeros remain distinct from unavailable input cells; nonfinite calculated
+ratios are stored as `NA`.
 
-```text
-marine_inputs/
-  00_traits_and_species/trait_table.mammal302.active_TY_NK_final_18pt.tsv
-  17_large_matrix_archives/branch_coordinate_matrices.tar.gz
-  supplemental_authority/marine_2026_fixed_coord_state_17432_v1.tsv.gz
-```
+Choose the validation design separately:
 
-The first two are the frozen Dryad inputs. The third is the pre-existing A2U
-artifact admitted as TARGET001-AUTHORITY-ADDENDUM001. It supplements
-state provenance only; the original raw values remain numerical authority,
-and the historical 17,428-gene classified member retains its own partial axis.
-No precomputed GBI or screen results are needed or read by this entry point.
+- **`nested_phase12B` and `nested_phase13`** repeat feature screening within
+  each training fold. They preserve two historical arithmetic variants and
+  remain separate choices.
+- **`global_screen_foldwise`** fits the globally screened gene set fold by
+  fold. Because screening has already used the full dataset, its held-out
+  predictions do not provide nested feature-selection validation.
 
-ADDENDUM006 restores the historical execution path automatically: use the
-supplied crosswalk as an inverse computational-order view, compute the unchanged
-S2 recipe, write with the original R writer, reorder only the text tokens back
-to the public axes, then read this newly generated GBI. Raw values and public
-branch identities do not change. No manual conversion, Python runtime, archived
-GBI input or precision option is involved. This historical order/serialization
-rule does not apply to the ordinary other-data S2 entry point.
+These recipes reproduce specified analyses. Their trimming and screening
+rules should be assessed for the dataset and scientific question at hand.
 
-The output parent must exist and the run directory must be new and outside
-the input root. No files are overwritten and no historical absolute-path
-fallback is used. The default frozen environment is R 4.4.2, ape 5.8-1 and
-castor 1.8.4 on aarch64-apple-darwin20. An explicit
-`environment = "compatibility"` run is warned and non-certifying.
+## Historical Marine/S2 replay (worked example)
 
-Major outputs: `raw_matrix.rds`, `upstream_tokens.rds`,
-`S2_baseline_GBI.rds` (its `gbi` is the generated/read-back representation),
-`GBI.generated_native.tsv`, `GBI.generated_consumed.oldlabels.tsv`,
-`GBI_computational_order.tsv`, `GBI_consumption_boundary.rds`,
-per-trait branch states/tested/significant/gene-ledger
-tables, `run.rds`, `input_hashes.tsv`, `frozen_profile.yaml`, `sessionInfo.txt`,
-`RUN_STATUS.yaml` and `SHA256SUMS`. Failures after output reservation retain
-their actual stage in `RUN_STATUS.yaml`; a completed run is not automatically
-a certified replay. The separate development validator compares results to
-the frozen TARGET001 outputs after execution.
+The Marine workflow reproduces the study-specific downstream analyses from
+frozen inputs. Use `lt_run_marine()` for the baseline and gene screens,
+`lt_run_marine_m2()` for the full computation, and
+`lt_export_marine_tables()` to export tables from a completed run without
+refitting. The [Marine replay guide](inst/workflow/MARINE_REPLAY.md) describes
+the baseline inputs and output files; the
+[Marine full-workflow guide](inst/workflow/MARINE_M2.md) covers the complete
+input bundle and computation. `?lt_run_marine` and `lt_marine_profile()`
+also describe the baseline entry and its required inputs.
 
-This historical study profile includes its frozen inclusive upper-2.5% trim
-and strict-prefix FDR rule; neither is a recommended generic default. SHA
-checks belong to this explicit frozen replay route, not normal user objects.
-M1 alone does not execute the later models or confer full 22-target V1 certification.
+Frozen input snapshot checks and historical computation-order/serialization
+rules are specific to this Marine replay route. The trimming, GBI, ancestral
+annotation and screening rules of `submitted_S2` also apply when that recipe
+is explicitly selected for other datasets. Completion is recorded separately
+from comparisons with the historical reference results.
 
-## Complete Marine computation and reporting (development)
+## Scope and supported environments
 
-The M2 entry extends the same raw-input workflow through permutation replay,
-grouped validation, full-data fits, turnover and descriptive projections. It
-requires the thirteen-file admitted bundle, whose layout is documented in
-[the installed Marine workflow guide](inst/workflow/MARINE_M2.md).
+Sequence alignment and tree inference precede SplitAligner. SplitAligner
+constructs branch-coordinate matrices from those trees; La Terra analyzes
+the exported measurements alongside the trait and tree information.
 
-```r
-run <- lt_run_marine_m2(
-  data_root = "/path/to/marine_inputs",
-  output_dir = "/path/to/results/marine_run_001",
-  cores = 4L
-)
-```
+Development checks have been performed on macOS arm64 with R 4.4.2.
+The Marine exact-replay reference also specifies ape 5.8-1 and castor 1.8.4
+on aarch64-apple-darwin20. For the Marine entry points,
+`environment = "compatibility"` permits an attempt in another environment
+and records a warning. Other platform/version combinations still require
+validation; this mode does not guarantee successful execution or equality
+with the historical outputs.
 
-`lt_export_marine_tables()` is a separate terminal reporting entry for a
-completed run. It does not rerun the expensive scientific stages or import
-old result workbooks. The five table files preserve their historical worksheet
-schemas; separate companions retain authority, transformations, historical
-references and the 22-target evidence ledger. Reporting-only dependencies are
-the R packages `openxlsx`, `xml2` and `zip`.
+Completed runs retain input-hash manifests, `SHA256SUMS` and `sessionInfo.txt`.
+If an analysis fails after creating its run directory, `RUN_STATUS.yaml`
+records the stage and the files already produced remain available for
+inspection.
 
-```r
-tables <- lt_export_marine_tables(
-  data_root = "/path/to/marine_inputs",
-  run_dir = "/path/to/results/marine_run_001",
-  output_dir = "/path/to/results/marine_tables_001"
-)
-tables$run$results$target_status
-```
+## Additional interfaces
 
-Only the final S5 coefficient display uses the explicitly admitted six-
-significant-digit numeric view. Fits, signs, markers and ordering retain full
-precision. Original-generator-unlocated presentation rules are disclosed;
-no old numeric answers are copied. TGT021 table reproduction remains under
-independent development review. Neither a completed model run nor assembled
-tables certify the development package.
-
-## Retained development capabilities
-
-This repository also retains the earlier lightweight S3
-scientific objects, authoritative R-native structural validators,
-machine-readable schemas, provenance containers, certified C3-derived rate
-views, branch-state association/calibration operators, and a boundary-aware
-log-relative representation.
-
-`lt_matrix` stores dense base-R values, coordinate truth, current-payload
-absence reasons, and typed payload identity as separate fields. Imported and
-derived branch-associated quantities are explicit and coordinate identities
-are stored rather than recomputed.
-
-The current log-relative API uses `lt_log_relative(gbi)` and separates
-ZERO_MASS from POSITIVE_LOG without a joint p-value. Historical finite
-`logGBI` rates remain readable and migratable but cannot enter ordinary
-inference. Their global-k10 numerical representation is a diagnostic/replay
-view only: ordinary inference refuses it, structural validation does not
-authenticate its provenance, and frozen replay comparison requires separately
-supplied source and replay authorities. La Terra does not perform upstream
-alignment, tree inference, SplitAligner coordinate construction, or new
-scientific null design. The explicit Marine/S2 route above consumes supplied
-coordinate identities and performs only the frozen historical ASR recipe.
-Retained C3 and zero-inference development APIs are not substitutions for the
-current Marine/S2 V1 contract.
-
-The frozen architectural note is installed at
-`inst/doc/architecture-freeze.md`.
+The package also includes typed matrix objects, structural validators and
+provenance utilities, together with separate development interfaces for a
+C3 baseline and log-relative analysis. These interfaces are documented in
+`inst/doc/` and are not substituted into the binary-trait workflow.
+The log-relative interface treats exact zero mass and positive log variation
+separately, without a joint p-value. Historical finite-sentinel logGBI objects
+can be read or migrated, but cannot enter ordinary inference. See the
+[architecture guide](inst/doc/architecture-freeze.md) for details.
 
 ## Related work and recommended citations
 
