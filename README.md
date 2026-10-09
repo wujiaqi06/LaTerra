@@ -33,7 +33,7 @@ arm64 with R 4.4.2; other environments still need validation.
 
 ## From SplitAligner to La Terra
 
-The primary source of input is the **Perl implementation of SplitAligner**
+The primary source of input is the **[Perl implementation of SplitAligner](https://github.com/wujiaqi06/SplitAligner)**
 described in the SplitAligner paper. Keep its matrix together with the
 reference species tree and the accompanying branch-coordinate and cell-state
 information. These files tell La Terra what each column represents and which
